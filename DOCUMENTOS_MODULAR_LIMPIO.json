@@ -1,0 +1,2300 @@
+{
+  "name": "AUTOMATIZACION DEMOSTRATIVA DE GESTION DOCUMENTAL",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $json.carpetaCliente }}",
+        "driveId": {
+          "__rl": true,
+          "value": "YOUR_DRIVE_FOLDER_ID",
+          "mode": "list"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1WGgyhVEF5ge8-f8iyjXieXBORxG50JNY",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -256,
+        992
+      ],
+      "id": "01370fad-6932-4b4d-8324-175d7d73e391",
+      "name": "Carpeta Cliente"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Preparar Nombres Carpetas').item.json.carpetaContrato }}",
+        "driveId": {
+          "__rl": true,
+          "value": "YOUR_DRIVE_FOLDER_ID",
+          "mode": "list"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -48,
+        992
+      ],
+      "id": "85a4b202-60c4-4611-ab09-86007f4718c0",
+      "name": "Carpeta del Contrato"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "=CARPETA ADMINISTRATIVA {{ $json.name }}",
+        "driveId": {
+          "__rl": true,
+          "value": "YOUR_DRIVE_FOLDER_ID",
+          "mode": "list"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        288,
+        1168
+      ],
+      "id": "d0697f04-61f4-4961-a631-b2905be6d8f1",
+      "name": "CARPETA ADMINISTRATIVA"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "=CARPETA OPERATIVA {{ $('Carpeta del Contrato').item.json.name }}",
+        "driveId": {
+          "__rl": true,
+          "value": "YOUR_DRIVE_FOLDER_ID",
+          "mode": "list"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Carpeta del Contrato').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        288,
+        800
+      ],
+      "id": "f7b95888-d06c-4086-921d-311dbae5f9f7",
+      "name": "CARPETA OPERATIVA"
+    },
+    {
+      "parameters": {
+        "jsCode": "const salida = [];\n\nfor (const [key, value] of Object.entries($binary)) {\n\n  salida.push({\n    json: {\n      nombreArchivo: value.fileName,\n      mimeType: value.mimeType,\n      asunto: $json.subject,\n      from: $json.from,\n      date: $json.date\n    },\n    binary: {\n      attachment: value\n    }\n  });\n\n}\n\nreturn salida;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4192,
+        288
+      ],
+      "id": "428f7318-c1a4-49c5-bb61-6c1dc31c22ac",
+      "name": "SEPARAR ADJUNTOS",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "17a3ab2f-7750-4582-9adb-b8864a73d33d",
+              "leftValue": "={{ $json.nombreArchivo.toLowerCase() }} ",
+              "rightValue": "contrato",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3664,
+        480
+      ],
+      "id": "09c1c021-960d-49a6-9c2a-29f7d0b34485",
+      "name": "If_FILTRAR CONTRATO"
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash"
+        },
+        "text": "Analiza el contrato PDF adjunto.\n\nEl documento puede ser:\n\n* PDF digital con texto seleccionable.\n* PDF escaneado.\n* Documento con texto manuscrito.\n* Documento con calidad baja o parcialmente legible.\n\nExtrae únicamente la información visible en el documento y responde exclusivamente con JSON válido.\n\n{\n\"tipo_contrato\": \"0\",\n\"numero_contrato\": \"0\",\n\"nombre_cliente\": \"0\",\n\"cedula_cliente\": \"0\",\n\"sede\": \"0\",\n\"codificacion\": \"0\",\n\"tipo_proyecto\": \"0\",\n\"fecha_firma_contrato\": \"0\",\n\"asesor\": \"0\",\n\"modelo\": \"0\",\n\"area\": \"0\",\n\"diseno\": \"0\",\n\"telefono\": \"0\",\n\"correo\": \"0\",\n\"alcance_proyecto\": \"0\",\n\"estado_proyecto\": \"0\",\n\"departamento\": \"0\",\n\"municipio\": \"0\",\n\"sector_vereda_corregimiento\": \"0\",\n\"ubicacion_referencia\": \"0\",\n\n\"losa\": \"0\",\n\"obra_gris\": \"0\",\n\"electricidad\": \"0\",\n\"acabados\": \"0\",\n\"transporte_descargue\": \"0\",\n\n\"valor_venta_losa\": \"0\",\n\"adicionales_descuentos_losa\": \"0\",\n\"valor_venta_obra_gris\": \"0\",\n\"adicionales_descuentos_obra_gris\": \"0\",\n\"valor_venta_electricidad\": \"0\",\n\"adicionales_descuentos_electricidad\": \"0\",\n\"valor_venta_acabados\": \"0\",\n\"adicionales_descuentos_acabados\": \"0\",\n\"valor_transporte_descargue\": \"0\",\n\n\"descuento\": \"0\",\n\"adicionales\": \"0\",\n\"total_valor_contrato\": \"0\",\n\"valor_otro_si\": \"0\",\n\"fecha_otro_si\": \"0\",\n\"valor_contrato_mas_otro_si\": \"0\",\n\n\"mes_sep\": \"0\",\n\"meses_plan_separe\": \"0\",\n\"prorroga\": \"0\",\n\"fecha_prorroga\": \"0\",\n\"dias\": \"0\",\n\"precio_venta\": \"0\",\n\"primer_abono\": \"0\",\n\"saldo_plan_separe\": \"0\",\n\n\"observacion\": \"0\"\n}\n\nREGLAS GENERALES:\n\n* Extraer únicamente información visible en el documento.\n* No inventar información.\n* No corregir palabras.\n* No completar palabras parcialmente legibles.\n* No asumir nombres, correos, municipios, departamentos, modelos, códigos o direcciones.\n* Si existe duda sobre algún carácter, devolver \"0\".\n* Priorizar exactitud sobre completitud.\n* Nunca devolver null.\n* Nunca devolver campos vacíos.\n* Nunca omitir claves.\n* Mantener exactamente los nombres de las claves indicadas.\n* Los campos que no correspondan al tipo de contrato identificado deben permanecer en \"0\".\n\nCLASIFICACIÓN:\n\n* Si el documento corresponde a CONTRATO DE OBRA o CONTRATO DE OBRA GRIS:\n  \"tipo_contrato\": \"CO\"\n\n* Si el documento corresponde a PLAN SEPARE o PLAN PROYÉCTATE:\n  \"tipo_contrato\": \"PS\"\n\nnumero_contrato:\n\n* Extraer únicamente el número del contrato o número del plan.\n* No extraer años.\n* No extraer cédulas.\n* No extraer áreas.\n* No extraer teléfonos.\n* No extraer valores monetarios.\n* Si existe duda, devolver \"0\".\n\nnombre_cliente:\n\n* Extraer el nombre completo del cliente o contratante.\n* No extraer el nombre del contratista o empresa contratista.\n* Si existen varios clientes o contratantes, conservar todos los nombres.\n* Si el nombre no es completamente legible, devolver \"0\".\n\ncedula_cliente:\n\n* Extraer únicamente números.\n* Sin puntos.\n* Sin comas.\n* Sin espacios.\n* Corresponde a la identificación del cliente o contratante.\n* Si existen varias identificaciones, separarlas por coma.\n* Si existe duda, devolver \"0\".\n\ntelefono:\n\n* Extraer únicamente números.\n* Si existen varios teléfonos del cliente, separarlos por coma.\n* No utilizar teléfonos del contratista.\n* Si existe duda sobre un número, devolver \"0\".\n\ncorreo:\n\n* Extraer únicamente si el correo completo es claramente legible.\n* No corregir dominios.\n* No corregir letras.\n* Convertir las letras a minúsculas.\n* Si existe duda en una sola letra o símbolo, devolver \"0\".\n\nfecha_firma_contrato:\n\n* Formato DD/MM/YYYY.\n* Extraer la fecha de firma o celebración del contrato.\n* No utilizar fechas de firmas posteriores, anexos o documentos diferentes como fecha de firma.\n* Si existe duda, devolver \"0\".\n\nmodelo:\n\n* Copiar exactamente el texto encontrado.\n* No reemplazar letras por números.\n* No reemplazar números por letras.\n* Si existe duda, devolver \"0\".\n\ncodificacion:\n\n* Copiar exactamente el texto del campo CODIFICACIÓN.\n* No reinterpretar caracteres.\n* Si existe duda, devolver \"0\".\n\ndepartamento, municipio, sector_vereda_corregimiento y ubicacion_referencia:\n\n* Extraer la información correspondiente a la ubicación del proyecto.\n* Copiar exactamente el texto encontrado.\n* No corregir ortografía.\n* No completar palabras.\n* No inferir información.\n* No utilizar automáticamente la ciudad donde se firma el contrato.\n* Si existe duda, devolver \"0\".\n\nalcance_proyecto:\n\n* Extraer el alcance exactamente como aparece.\n* No resumir.\n* No interpretar abreviaturas.\n* No agregar componentes que no aparezcan explícitamente.\n\nVALORES DE CONTRATO DE OBRA (CO):\n\nLos siguientes campos corresponden a valores de la tabla de precios o tabla económica del contrato:\n\n* valor_venta_losa: valor correspondiente a LOSA DE CIMENTACIÓN.\n* adicionales_descuentos_losa: adicional o descuento asociado específicamente a LOSA.\n* valor_venta_obra_gris: valor correspondiente a OBRA GRIS.\n* adicionales_descuentos_obra_gris: adicional o descuento asociado específicamente a OBRA GRIS.\n* valor_venta_electricidad: valor correspondiente a ELECTRICIDAD.\n* adicionales_descuentos_electricidad: adicional o descuento asociado específicamente a ELECTRICIDAD.\n* valor_venta_acabados: valor correspondiente a ACABADOS.\n* adicionales_descuentos_acabados: adicional o descuento asociado específicamente a ACABADOS.\n* valor_transporte_descargue: valor monetario correspondiente a TRANSPORTE Y DESCARGUE.\n\nREGLAS DE VALORES CO:\n\n* Extraer los valores individuales desde la tabla de precios o tabla económica correspondiente.\n* Devolver únicamente números.\n* Sin puntos.\n* Sin comas.\n* Sin símbolo $.\n* Si un componente no aparece, devolver \"0\".\n* Si un componente indica NO APLICA, devolver \"0\".\n* Si un adicional o descuento es general y no está asociado claramente a un componente, no asignarlo a ningún componente específico.\n* No confundir valores de cuotas, anticipos, abonos, IVA, utilidad u otros conceptos con los valores de los componentes.\n* Si existen varios valores para un mismo componente, utilizar el valor correspondiente a la tabla de precios.\n\ntotal_valor_contrato:\n\n* Extraer el VALOR TOTAL DEL CONTRATO.\n* Priorizar el valor indicado en la tabla de precios o tabla económica.\n* Si existe otro valor diferente en el encabezado u otra sección, no reemplazar el valor de la tabla económica.\n* Devolver únicamente números.\n* Sin puntos.\n* Sin comas.\n* Sin símbolo $.\n* Si existe duda, devolver \"0\".\n\nvalor_otro_si:\n\n* Extraer únicamente el valor explícitamente indicado para el OTROSÍ.\n* Devolver únicamente números.\n* Sin puntos.\n* Sin comas.\n* Sin símbolo $.\n* Si no existe, devolver \"0\".\n\nfecha_otro_si:\n\n* Extraer la fecha explícitamente asociada al OTROSÍ.\n* Formato DD/MM/YYYY.\n* Si no existe, devolver \"0\".\n\nvalor_contrato_mas_otro_si:\n\n* Si existe total_valor_contrato y valor_otro_si, calcular la suma.\n* Si valor_otro_si es \"0\", devolver total_valor_contrato.\n* Si existe duda sobre alguno de los valores utilizados para el cálculo, devolver \"0\".\n\ndescuento:\n\n* Extraer únicamente un descuento general explícitamente indicado.\n* Devolver únicamente números.\n* Si no existe, devolver \"0\".\n* Si el descuento corresponde específicamente a un componente, utilizar el campo adicional/descuento correspondiente a ese componente.\n\nadicionales:\n\n* Extraer únicamente adicionales generales expresamente mencionados.\n* No repetir aquí un adicional que ya esté claramente asociado a un componente.\n* Si no existen, devolver \"0\".\n\nCASILLAS DE CO:\n\nLos campos:\n\n* losa\n* obra_gris\n* electricidad\n* acabados\n* transporte_descargue\n\ncorresponden a casillas de selección.\n\nEjemplos:\n\nSI ( X ) NO ( )\n\nSI ( ) NO ( X )\n\nSI ( ✓ ) NO ( )\n\nSI ( ) NO ( ✔ )\n\nLas marcas pueden ser:\n\n* X\n* x\n* ✓\n* ✔\n* Marca manuscrita\n* Cualquier señal evidente de selección\n\nReglas:\n\n* Si la marca está claramente en SI → \"SI\".\n* Si la marca está claramente en NO → \"NO\".\n* Si ambas casillas están vacías → \"0\".\n* Si ambas casillas están marcadas → \"0\".\n* Si no es posible determinar la casilla seleccionada → \"0\".\n* No asumir respuestas.\n* Una palabra SI o NO escrita fuera de la casilla no constituye una selección.\n\nPLAN SEPARE (PS):\n\nLos campos específicos de PS son:\n\n* mes_sep\n* meses_plan_separe\n* prorroga\n* fecha_prorroga\n* dias\n* precio_venta\n* primer_abono\n* saldo_plan_separe\n\nREGLAS PS:\n\n* mes_sep: extraer el mes correspondiente al Plan Separe.\n* meses_plan_separe: duración del Plan Separe expresada en meses.\n* prorroga: extraer únicamente la información de prórroga explícitamente indicada.\n* fecha_prorroga: fecha correspondiente a la prórroga.\n* dias: cantidad de días explícitamente indicada.\n* precio_venta: precio de venta del proyecto.\n* primer_abono: primer abono indicado.\n* saldo_plan_separe: saldo indicado del Plan Separe.\n* Devolver valores monetarios únicamente como números, sin $, puntos ni comas.\n* No confundir precio de venta, primer abono y saldo con otros valores.\n* No calcular estos valores.\n* Si alguno no aparece o genera duda → \"0\".\n\nobservacion:\n\n* Extraer observaciones, notas, promociones, obsequios, cambios de contrato o condiciones particulares relacionadas directamente con el cliente o contrato.\n* Priorizar la sección OBSERVACIONES y notas específicas.\n* No incluir cláusulas generales ni información legal que no corresponda a una observación particular.\n* Si no existen → \"0\".\n\nIMPORTANTE:\n\nResponde únicamente con el JSON válido.\n\nNo agregues explicaciones.\nNo uses markdown.\nNo uses bloques ```json.\nNo agregues texto antes o después del JSON.\n",
+        "inputType": "binary",
+        "binaryPropertyName": "attachment",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -3392,
+        464
+      ],
+      "id": "97234ed7-eab6-42b1-b722-4e183de53724",
+      "name": "Analizar Contrato Gemini",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener los datos que vienen del Google Sheets\nconst datos = $json;\n\n// Cédula\nconst cedula = datos[\"CEDULA\"] || datos[\"CÉDULA\"] || \"\";\n\n// Nombre del cliente\n// CO utiliza NOMBRE y PS utiliza CLIENTE \nconst cliente =\n  datos[\"NOMBRE\"] ||\n  datos[\"CLIENTE \"] ||\n  datos[\"CLIENTE\"] ||\n  \"\";\n\n// Tipo de contrato\nconst tipo =\n  datos[\"TIPO CONTRATO\"] ||\n  datos[\"TIPO_CONTRATO\"] ||\n  \"\";\n\n// Número de contrato\n// CO: NUMERO DE CONTRATO\n// PS: NUMERO CONTRATO\nconst numero =\n  datos[\"NUMERO DE CONTRATO\"] ||\n  datos[\"NUMERO CONTRATO\"] ||\n  \"\";\n\n// Crear nombres de carpetas\nconst carpetaCliente =\n  `${cedula} ${cliente} - AUTO`.trim().toUpperCase();\n\nconst carpetaContrato =\n  `${tipo} ${numero} ${cliente}`.trim().toUpperCase();\n\n// Mantener todos los datos originales y agregar los nombres\nreturn [\n  {\n    json: {\n      ...datos,\n      carpetaCliente,\n      carpetaContrato\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        992
+      ],
+      "id": "32eeecb7-41c8-44a6-8820-c45d02586eb0",
+      "name": "Preparar Nombres Carpetas"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        704,
+        640
+      ],
+      "id": "4266234b-a43d-403d-98fa-6483c6abd8c4",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "attachment",
+        "name": "={{ $json.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "value": "YOUR_DRIVE_FOLDER_ID",
+          "mode": "list"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        992,
+        640
+      ],
+      "id": "9ca9ea48-b1d5-40f0-ac50-0186c364dc17",
+      "name": "Subir PDF Administrativa"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        608,
+        448
+      ],
+      "id": "ddf747c8-acf7-415f-81cd-1a8d8e2b196f",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "384672ab-6f19-484d-9b6e-1fbe2990b110",
+              "leftValue": "=={{ ($json.nombreArchivo || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase() }}",
+              "rightValue": "contrato",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "b04eef90-50e3-469b-94c3-2b3e6f9f6721",
+              "leftValue": "=={{ ($json.nombreArchivo || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase() }}",
+              "rightValue": "cedula",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        848,
+        448
+      ],
+      "id": "a673a7c2-464f-44d1-bde0-bbd49bb0ed82",
+      "name": "Filtrar PDF"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "14c0a584-79c4-4d62-abff-1fb3e044a032",
+              "leftValue": "={{ $('SEPARAR ADJUNTOS').all().length }}",
+              "rightValue": 8,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3968,
+        288
+      ],
+      "id": "52d7c213-b9cc-43b9-b64b-f17c2ea603e9",
+      "name": "VALIDAR DOCUMENTOS PDF"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -4416,
+        288
+      ],
+      "id": "36af4123-0d41-4c2e-a6c9-1b17fe363d91",
+      "name": "BUSCAR CORREO_DESCARGAR PDF"
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $('Obtener el primer correo de la bandeja2').item.json.id }}",
+        "message": "=<p>Hola,</p>\n\n<p>El sistema de gestión documental de <strong>la organización</strong> recibió correctamente el correo correspondiente al proyecto; sin embargo, <strong>no fue posible iniciar el proceso automático</strong> debido a que la documentación enviada está incompleta.</p>\n\n<p>Para continuar con el procesamiento del contrato, el correo debe incluir los siguientes documentos obligatorios en formato PDF:</p>\n\n<ul>\n  <li>Contrato de Obra</li>\n  <li>Cédula</li>\n  <li>Resumen de Compra</li>\n  <li>Carta de Autorización</li>\n  <li>Comprobante de Pago</li>\n  <li>Planta Arquitectónica</li>\n  <li>Documento de Fachadas</li>\n  <li>Ficha Técnica de Obra Gris</li>\n</ul>\n\n<p>Una vez complete la documentación requerida, envíe nuevamente el correo con el asunto correspondiente para que el sistema pueda procesar el contrato correctamente.</p>\n\n<br>\n\n<p><strong>Importante:</strong> Este es un correo generado automáticamente. Por favor, <strong>no responda este mensaje</strong>.</p>\n\n<br>\n\n<p>Atentamente,<br>\nSistema de Gestión Documental<br>\n<strong>la organización</strong></p>",
+        "options": {
+          "replyToSenderOnly": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -3280,
+        64
+      ],
+      "id": "356210d9-2265-4450-ac99-5b3f56621681",
+      "name": "MENSAJE PDF INCOMPLETO"
+    },
+    {
+      "parameters": {
+        "jsCode": "const parts = $json.content?.parts || [];\n\nconst texto = parts\n   .filter(part => typeof part.text === 'string')\n   .map(part => part.text)\n   .join('');\n\nconst datos = JSON.parse(texto)\n\nreturn [\n  {\n    json: datos\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3168,
+        464
+      ],
+      "id": "71db1434-cd69-4a83-9089-93dcd5f18e92",
+      "name": "Convertir Respuesta JSON a TEXTO"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gmail.googleapis.com/gmail/v1/users/me/watch",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gmailOAuth2",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"topicName\": \"projects/YOUR_GCP_PROJECT_ID/topics/YOUR_PUBSUB_TOPIC\",\n  \"labelIds\": [\n    \"INBOX\"\n  ],\n  \"labelFilterBehavior\": \"INCLUDE\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -4944,
+        672
+      ],
+      "id": "db23cce5-f793-4351-b16b-7eb9f633bc4e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gmail-push",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -5280,
+        -32
+      ],
+      "id": "4269e73e-b48c-471f-a39a-b5546d31d7ae",
+      "name": "Webhook (Google Pub/Sub)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const encoded = $json.body.message.data;\n//Obtiene el texto Base64 que llegó desde Pub/Sub.\n\nconst decoded = JSON.parse(\n    Buffer.from(encoded, 'base64').toString('utf8')\n) \n//\"Convierte este Base64 en texto.\"\nreturn [\n  {\n    json: decoded\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5072,
+        -32
+      ],
+      "id": "3fc7c3be-8023-477a-b0a8-d695cbb3d44c",
+      "name": "(Decodificar Base64)"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [items[0]];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3648,
+        64
+      ],
+      "id": "f7bc9038-9831-424d-9970-a9eed705f021",
+      "name": "CONSERVAR UN SOLO ITEM"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const asunto = $json.Subject ?? $json.subject ?? \"\";\n\nconst asuntoNormalizado = asunto.normalize(\"NFD\")\n  // Convierte caracteres con tilde a su forma base\n  // Ejemplo: \"Ó\" → \"O\", \"Á\" → \"A\"\n  \n // Elimina los caracteres especiales generados por     normalize()\n  // Ejemplo: \"Contrató de Obra\" → \"Contrato de Obra\"\n  .replace(/[\\u0300-\\u036f]/g, \"\")\n\n   // Convierte todo el texto a minúsculas\n  // Ejemplo: \"CONTRATO DE OBRA\" → \"contrato de obra\"\n  .toLowerCase()\n\n\n    // Elimina todos los espacios en blanco\n  // Ejemplo: \"contrato de obra\" → \"contratodeobra\"\n  .replace(/\\s+/g, \"\");\n\nreturn {\n  ...$json,\n  asuntoNormalizado,   //nuevo campo\n};  "
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5248,
+        288
+      ],
+      "id": "13f7832f-f0f6-4efc-bc7c-8b6c3a10e2ac",
+      "name": "NORMALIZAR ASUNTO"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tipo_contrato }}",
+                    "rightValue": "CO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "859c3078-1e56-4045-98e5-23d11be668b9"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CONTRATO DE OBRA"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6eb002fc-d64c-4c28-80c2-bd064ec7e355",
+                    "leftValue": "={{ $json.tipo_contrato }}",
+                    "rightValue": "PS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PLAN SEPARE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -3024,
+        1024
+      ],
+      "id": "702952b6-d6e1-4cdf-9aa4-792ccec78b0c",
+      "name": "Tipo de Contrato formulario"
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = \"https://docs.google.com/forms/d/e/YOUR_GOOGLE_FORM_ID_CO/viewform?usp=pp_url\";\n\nconst url =\nbaseUrl +\n\"&entry.1365143310=\" + encodeURIComponent($execution.resumeUrl) +\n\"&entry.464315636=\" + encodeURIComponent($json.idValidacion) +\n\"&entry.288758094=\" + encodeURIComponent($json.sede) +\n\"&entry.466181133=\" + encodeURIComponent($json.nombre_cliente) +\n\"&entry.993448821=\" + encodeURIComponent($json.cedula_cliente) +\n\"&entry.1327033703=\" + encodeURIComponent($json.telefono) +\n\"&entry.1846213189=\" + encodeURIComponent($json.correo) +\n\"&entry.288949335=\" + encodeURIComponent($json.asesor) +\n\"&entry.750406079=\" + encodeURIComponent($json.codificacion) +\n\"&entry.115476410=\" + encodeURIComponent($json.tipo_proyecto) +\n\"&entry.303013757=\" + encodeURIComponent($json.fecha_firma_contrato) +\n\"&entry.1235466447=\" + encodeURIComponent($json.numero_contrato) +\n\"&entry.1185703410=\" + encodeURIComponent($json.area) +\n\"&entry.1666253644=\" + encodeURIComponent($json.alcance_proyecto) +\n\"&entry.318394221=\" + encodeURIComponent($json.estado_proyecto) +\n\"&entry.1563771338=\" + encodeURIComponent($json.departamento) +\n\"&entry.1414555477=\" + encodeURIComponent($json.municipio) +\n\"&entry.2113546956=\" + encodeURIComponent($json.sector_vereda_corregimiento) +\n\"&entry.784512044=\" + encodeURIComponent($json.ubicacion_referencia) +\n\n\"&entry.697530707=\" + encodeURIComponent($json.valor_venta_losa) +\n\"&entry.1154027874=\" + encodeURIComponent($json.adicionales_descuentos_losa) +\n\"&entry.727959723=\" + encodeURIComponent($json.valor_venta_obra_gris) +\n\"&entry.265156226=\" + encodeURIComponent($json.adicionales_descuentos_obra_gris) +\n\"&entry.1410960052=\" + encodeURIComponent($json.valor_venta_electricidad) +\n\"&entry.915796406=\" + encodeURIComponent($json.adicionales_descuentos_electricidad) +\n\"&entry.2127684117=\" + encodeURIComponent($json.valor_venta_acabados) +\n\"&entry.1187726642=\" + encodeURIComponent($json.adicionales_descuentos_acabados) +\n\"&entry.275270326=\" + encodeURIComponent($json.transporte_descargue) +\n\n\"&entry.1735474357=\" + encodeURIComponent($json.total_valor_contrato) +\n\"&entry.1655719903=\" + encodeURIComponent($json.valor_otro_si) +\n\"&entry.1449096013=\" + encodeURIComponent($json.fecha_otro_si) +\n\"&entry.11557632=\" + encodeURIComponent($json.valor_contrato_mas_otro_si) +\n\n\"&entry.1246323568=SI\" +\n\"&entry.288794696=\" + encodeURIComponent($json.observacion);\n\nreturn {\n  ...$json,\n  urlFormulario: url\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2304,
+        880
+      ],
+      "id": "c9947176-c1b8-48b9-afe4-9d2975499cb5",
+      "name": "Crear URL Formulario CO"
+    },
+    {
+      "parameters": {
+        "jsCode": "const baseUrl = \"https://docs.google.com/forms/d/e/YOUR_GOOGLE_FORM_ID_PS/viewform?usp=pp_url\";\n\nconst url =\nbaseUrl +\n\"&entry.1334780057=\" + encodeURIComponent($execution.resumeUrl) +\n\"&entry.551821566=\" + encodeURIComponent($json.idValidacion) +\n\"&entry.1563331203=\" + encodeURIComponent($json.numero_contrato) +\n\"&entry.1767865802=\" + encodeURIComponent($json.nombre_cliente) +\n\"&entry.1099718345=\" + encodeURIComponent($json.telefono) +\n\"&entry.1270861189=\" + encodeURIComponent($json.cedula_cliente) +\n\"&entry.333586373=\" + encodeURIComponent($json.asesor) +\n\"&entry.1134497313=\" + encodeURIComponent($json.sede) +\n\"&entry.1839320833=\" + encodeURIComponent($json.mes_sep) +\n\"&entry.1410848980=\" + encodeURIComponent($json.fecha_firma_contrato) +\n\"&entry.1010360774=\" + encodeURIComponent($json.meses_plan_separe) +\n\"&entry.1365159112=\" + encodeURIComponent($json.prorroga) +\n\"&entry.1508088542=\" + encodeURIComponent($json.fecha_prorroga) +\n\"&entry.643454978=\" + encodeURIComponent($json.estado) +\n\"&entry.1673361189=\" + encodeURIComponent($json.referencia) +\n\"&entry.675487274=\" + encodeURIComponent($json.precio_venta) +\n\"&entry.1912977232=\" + encodeURIComponent($json.primer_abono) +\n\"&entry.1050501978=\" + encodeURIComponent($json.saldo_plan_separe) +\n\"&entry.1003654178=\" + encodeURIComponent($json.estado) +\n\"&entry.308392921=\" + encodeURIComponent($json.observacion);\n\nreturn {\n  ...$json,\n  urlFormulario: url\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2288,
+        1184
+      ],
+      "id": "3be50aaa-c93a-4976-9512-0058b5a94ef3",
+      "name": "Crear URL Formulario PS"
+    },
+    {
+      "parameters": {
+        "sendTo": "ADMIN_EMAIL@example.com",
+        "subject": "Validación de información - Contrato de Obra ",
+        "message": "=<h2>Validación de información - Contrato de Obra</h2>\n\n<p>Hola,</p>\n\n<p>El sistema de gestión documental de <strong>la organización</strong> procesó correctamente la documentación recibida y <strong>extrajo automáticamente la información del Contrato de Obra</strong> mediante inteligencia artificial.</p>\n\n<p>Antes de registrar la información, es necesario realizar una validación para confirmar que los datos extraídos sean correctos.</p>\n\n<p>A continuación, se presenta un resumen de la información identificada:</p>\n\n<table style=\"border-collapse: collapse;\">\n\n  <tr>\n    <td><b>Cliente:</b></td>\n    <td>{{$json.nombre_cliente}}</td>\n  </tr>\n\n  <tr>\n    <td><b>Cédula:</b></td>\n    <td>{{$json.cedula_cliente}}</td>\n  </tr>\n\n  <tr>\n    <td><b>Número de contrato:</b></td>\n    <td>{{$json.numero_contrato}}</td>\n  </tr>\n\n\n</table>\n\n<p>Para continuar con el proceso, haga clic en el siguiente botón y verifique la información. Si encuentra algún dato incorrecto, podrá corregirlo antes de enviar el formulario.</p>\n\n<p>\n<a href=\"{{$json.urlFormulario}}\" style=\"\ndisplay:inline-block;\nbackground:#2563eb;\ncolor:white;\npadding:10px 18px;\ntext-decoration:none;\nborder-radius:5px;\nfont-size:14px;\nfont-weight:600;\">\nValidar información\n</a>\n</p>\n\n<p><strong></strong> La información será registrada en la base de datos únicamente después de que el formulario haya sido validado y enviado.</p>\n\n<br>\n\n<p><strong>Importante:</strong> Este es un correo generado automáticamente. Por favor, <strong>no responda este mensaje</strong>.</p>\n\n<br>\n\n<p>Atentamente,<br>\nSistema de Gestión Documental<br>\n<strong>la organización</strong></p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -2064,
+        880
+      ],
+      "id": "ec6189dc-7784-4136-972d-ec1d2a5501be",
+      "name": "Enviar Correo Validación CO"
+    },
+    {
+      "parameters": {
+        "sendTo": "ADMIN_EMAIL@example.com",
+        "subject": "Validación de información - Plan Separe ",
+        "message": "=<h2>Validación de información - Plan Separe</h2>\n\n<p>Hola,</p>\n\n<p>El sistema de gestión documental de <strong>la organización</strong> procesó correctamente la documentación recibida y <strong>extrajo automáticamente la información del Plan Separe</strong> mediante inteligencia artificial.</p>\n\n<p>Antes de registrar la información, es necesario realizar una validación para confirmar que los datos extraídos sean correctos.</p>\n\n<p>A continuación, se presenta un resumen de la información identificada:</p>\n\n<table style=\"border-collapse: collapse;\">\n\n  <tr>\n    <td><b>Cliente:</b></td>\n    <td>{{$json.nombre_cliente}}</td>\n  </tr>\n\n  <tr>\n    <td><b>Cédula:</b></td>\n    <td>{{$json.cedula_cliente}}</td>\n  </tr>\n\n  <tr>\n    <td><b>Número de plan separe:</b></td>\n    <td>{{$json.numero_contrato}}</td>\n  </tr>\n\n\n</table>\n\n<p>Para continuar con el proceso, haga clic en el siguiente botón y verifique la información. Si encuentra algún dato incorrecto, podrá corregirlo antes de enviar el formulario.</p>\n\n<p>\n<a href=\"{{$json.urlFormulario}}\" style=\"\ndisplay:inline-block;\nbackground:#2563eb;\ncolor:white;\npadding:10px 18px;\ntext-decoration:none;\nborder-radius:5px;\nfont-size:14px;\nfont-weight:600;\">\nValidar información\n</a>\n</p>\n\n<p><strong></strong> La información será registrada únicamente después de que el formulario haya sido validado y enviado.</p>\n\n<br>\n\n<p><strong>Importante:</strong> Este es un correo generado automáticamente. Por favor, <strong>no responda este mensaje</strong>.</p>\n\n<br>\n\n<p>Atentamente,<br>\nSistema de Gestión Documental<br>\n<strong>la organización</strong></p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -2064,
+        1184
+      ],
+      "id": "82302be6-f170-4d57-ab8e-9afc00458673",
+      "name": "Enviar Correo Validación PS"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "attachment",
+        "name": "={{ $json.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "value": "YOUR_DRIVE_FOLDER_ID",
+          "mode": "list"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1104,
+        432
+      ],
+      "id": "57871533-b5ed-46a5-bda9-e4b24d36be79",
+      "name": "Subir PDF Operativa"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 1,
+        "filters": {
+          "q": "in:inbox is:unread newer_than:2d"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -4864,
+        -32
+      ],
+      "id": "5e23927a-66b4-494d-9335-81a37bb5e593",
+      "name": "Obtener el primer correo de la bandeja"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\n\nconst idValidacion =\n  `VAL-${d.tipo_contrato}-${d.numero_contrato}-${Date.now()}`;\n\nreturn [\n  {\n    json: {\n      ...d,\n      idValidacion\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2752,
+        1024
+      ],
+      "id": "3dbbfc1e-9aaa-4fe6-89bc-4384f8cd0f3b",
+      "name": "Generar ID validacion"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tipo_contrato }}",
+                    "rightValue": "CO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c45c0f64-1514-4975-9eb2-1c22f7d02d35"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CONTRATO DE OBRA"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cead243d-ee99-4a29-9d92-edbed5eb477e",
+                    "leftValue": "={{ $json.tipo_contrato }}",
+                    "rightValue": "PS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PLAN SEPARE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -2528,
+        1024
+      ],
+      "id": "d8e9fcc9-2859-48a5-be0e-f52ddaf76a91",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "httpMethod": "POST",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1440,
+        880
+      ],
+      "id": "300a3d12-79eb-4725-88cb-d623ff02cd99",
+      "name": "Wait CO"
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "httpMethod": "POST",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1440,
+        1184
+      ],
+      "id": "993979c6-083c-4a03-a4de-7b38f24fc4c7",
+      "name": "Wait PS"
+    },
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $('BUSCAR CORREO_DESCARGAR PDF').item.json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -1856,
+        880
+      ],
+      "id": "5657f05a-a982-40a8-988d-884394f2d76a",
+      "name": "Marcar como leído CO"
+    },
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $('BUSCAR CORREO_DESCARGAR PDF').item.json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -1856,
+        1184
+      ],
+      "id": "3abfac17-2e12-4ea9-b810-134b3b55e5ca",
+      "name": "Marcar como leído PS"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cf5f2303-202d-4dd0-8ecf-0fb1ec14ea62",
+              "leftValue": "={{ String($json.body.aceptaCarpeta ?? '').trim().toUpperCase() }}",
+              "rightValue": "SI",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1232,
+        880
+      ],
+      "id": "8ced73d0-82b1-4aa9-8b0e-9019f4eee75f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0ca8785d-a827-4d4d-9a29-d50cfb89acde",
+              "leftValue": "={{ String($json.body.aceptaCarpeta ?? '').trim().toUpperCase() }}",
+              "rightValue": "SI",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1232,
+        1184
+      ],
+      "id": "c2f812b5-7b9e-4f26-bc9b-7dcb816599a3",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "operation": "share",
+        "folderNoRootId": {
+          "__rl": true,
+          "value": "={{ $('CARPETA OPERATIVA').item.json.id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "writer",
+            "type": "user",
+            "emailAddress": "OPERATIONS_EMAIL@example.com"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1328,
+        432
+      ],
+      "id": "adb5f1e5-12c1-4d1a-9b21-5a8961ba66c5",
+      "name": "Share folder"
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $('Obtener el primer correo de la bandeja').item.json.id }}",
+        "message": "=<p>Hola,</p>\n\n<p>\nLa carpeta del cliente fue revisada y \n<strong>no fue aceptada</strong>, por lo que el proceso automático no continuará.\n</p>\n\n<p>\n<strong>Cliente:</strong> {{ $json.body.cliente }}<br>\n<strong>Cédula:</strong> {{ $json.body.cedula }}<br>\n<strong>Número de contrato:</strong> {{ $json.body.numeroContrato }}<br>\n<strong>Asesor:</strong> {{ $json.body.asesor }}<br>\n<strong>Observación:</strong> {{ $json.body.observacion }}\n</p>\n\n<p>\nPor favor, realice las correcciones correspondientes de acuerdo con las observaciones registradas y \n<strong>vuelva a enviar la carpeta del cliente</strong> para su revisión.\n</p>\n\n<p>\n<strong>Este es un correo automático. Por favor, no responda a este mensaje.</strong>\n</p>\n\n<p>\nAtentamente,<br>\n<strong>Sistema de Gestión Documental</strong>\n</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -816,
+        1328
+      ],
+      "id": "0c2b37a8-ffd7-47ae-b294-9232153d2ab7",
+      "name": "DOCUMENTACION INCOMPLETA1"
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $('Obtener el primer correo de la bandeja').item.json.id }}",
+        "message": "=<p>Hola,</p>\n\n<p>\nLa carpeta del cliente fue revisada y \n<strong>no fue aceptada</strong>, por lo que el proceso automático no continuará.\n</p>\n\n<p>\n<strong>Cliente:</strong> {{ $json.body.cliente }}<br>\n<strong>Cédula:</strong> {{ $json.body.cedula }}<br>\n<strong>Número de contrato:</strong> {{ $json.body.numeroContrato }}<br>\n<strong>Asesor:</strong> {{ $json.body.asesor }}<br>\n<strong>Observación:</strong> {{ $json.body.observacion }}\n</p>\n\n<p>\nPor favor, realice las correcciones correspondientes de acuerdo con las observaciones registradas y \n<strong>vuelva a enviar la carpeta del cliente</strong> para su revisión.\n</p>\n\n<p>\n<strong>Este es un correo automático. Por favor, no responda a este mensaje.</strong>\n</p>\n\n<p>\nAtentamente,<br>\n<strong>Sistema de Gestión Documental</strong>\n</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -816,
+        640
+      ],
+      "id": "f56558af-04c0-418f-b884-f2653b3d01ef",
+      "name": "DOCUMENTACION INCOMPLETA2"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "FECHA": "={{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}",
+            "TIPO CONTRATO": "={{ $json.body.tipoContrato }}",
+            "CEDULA": "={{ $json.body.cedula }}",
+            "TELEFONO": "={{ $json.body.telefono }}",
+            "ASESOR": "={{ $json.body.asesor }}",
+            "ACEPTA CARPETA": "={{ $json.body.aceptaCarpeta }}",
+            "ID VALIDACION": "={{ $json.body.idValidacion }}",
+            "NOMBRE": "={{ $json.body.cliente }}",
+            "CORREO ELECTRONICO": "={{ $json.body.correoElectronico }}",
+            "TIPO DE PROYECTO": "={{ $json.body.tipoContrato }}",
+            "FECHA FIRMA DE CONTRATO": "={{ $json.body.fechaFirmaContrato }}",
+            "NUMERO DE CONTRATO": "={{ $json.body.numeroContrato }}",
+            "AREA": "={{ $json.body.area }}",
+            "NOMBRE DE PROYECTO (CODIFICACION)": "={{ $json.body.nombreProyecto }}",
+            "ALCANCE DE PROYECTO ": "={{ $json.body.alcanceProyecto }}",
+            "ESTADO DE PROYECTO ": "={{ $json.body.estadoProyecto }}",
+            "DPTO DONDE SE VA A CONSTRUIR ": "={{ $json.body.departamento }}",
+            "MUNICIPIO DONDE SE VA A CONSTRUIR": "={{ $json.body.municipio }}",
+            "SECTOR/VEREDA/CORREGIMIENTO": "={{ $json.body.sector }}",
+            "UBICACION DE REFERENCIA ": "={{ $json.body.ubicacionReferencia }}",
+            "VALOR DE VENTA LOSA ": "={{ $json.body.valorVentaLosa }}",
+            "VALOR ADICIONALES O DESCUENTOS LOSA  ": "={{ $json.body.adicionalesDescuentosLosa }}",
+            "VALOR DE VENTA OBRA GRIS": "={{ $json.body.valorVentaObraGris }}",
+            "VALOR DE ADICIONALES O DESCUENTOS OBRA GRIS ": "={{ $json.body.adicionalesDescuentosObraGris }}",
+            "VALOR DE VENTA ELECTRICIDAD": "={{ $json.body.valorVentaElectricidad }}",
+            "VALOR DE VENTA ACABADOS  ": "={{ $json.body.valorVentaAcabados }}",
+            "VALOR DE ADICIONALES O DESCUENTOS ACABADOS": "={{ $json.body.adicionalesDescuentosAcabados }}",
+            "TRANSPORTE Y DESCARGUE ": "={{ $json.body.transporteDescargue }}",
+            "TOTAL VALOR DE CONTRATO": "={{ $json.body.totalValorContrato }}",
+            "VALOR OTRO SI ": "={{ $json.body.valorOtroSi }}",
+            "FECHA DE OTROSI": "={{ $json.body.fechaOtroSi }}",
+            "VALOR CONTRATO + OTROSI ": "={{ $json.body.valorContratoOtroSi }}",
+            "OBSERVACIONES": "={{ $json.body.observacion }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "FECHA",
+              "displayName": "FECHA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TIPO CONTRATO",
+              "displayName": "TIPO CONTRATO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SEDE",
+              "displayName": "SEDE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "NOMBRE",
+              "displayName": "NOMBRE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CEDULA",
+              "displayName": "CEDULA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TELEFONO",
+              "displayName": "TELEFONO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CORREO ELECTRONICO",
+              "displayName": "CORREO ELECTRONICO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "NOMBRE DE PROYECTO (CODIFICACION)",
+              "displayName": "NOMBRE DE PROYECTO (CODIFICACION)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FECHA FIRMA DE CONTRATO",
+              "displayName": "FECHA FIRMA DE CONTRATO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TIPO DE PROYECTO",
+              "displayName": "TIPO DE PROYECTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ASESOR",
+              "displayName": "ASESOR",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NUMERO DE CONTRATO",
+              "displayName": "NUMERO DE CONTRATO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "AREA",
+              "displayName": "AREA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ALCANCE DE PROYECTO ",
+              "displayName": "ALCANCE DE PROYECTO ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ESTADO DE PROYECTO ",
+              "displayName": "ESTADO DE PROYECTO ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "DPTO DONDE SE VA A CONSTRUIR ",
+              "displayName": "DPTO DONDE SE VA A CONSTRUIR ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "MUNICIPIO DONDE SE VA A CONSTRUIR",
+              "displayName": "MUNICIPIO DONDE SE VA A CONSTRUIR",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "SECTOR/VEREDA/CORREGIMIENTO",
+              "displayName": "SECTOR/VEREDA/CORREGIMIENTO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "UBICACION DE REFERENCIA ",
+              "displayName": "UBICACION DE REFERENCIA ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VALOR DE VENTA LOSA ",
+              "displayName": "VALOR DE VENTA LOSA ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VALOR ADICIONALES O DESCUENTOS LOSA  ",
+              "displayName": "VALOR ADICIONALES O DESCUENTOS LOSA  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VALOR DE VENTA OBRA GRIS",
+              "displayName": "VALOR DE VENTA OBRA GRIS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VALOR DE ADICIONALES O DESCUENTOS OBRA GRIS ",
+              "displayName": "VALOR DE ADICIONALES O DESCUENTOS OBRA GRIS ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VALOR DE VENTA ELECTRICIDAD",
+              "displayName": "VALOR DE VENTA ELECTRICIDAD",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VALOR DE VENTA ACABADOS  ",
+              "displayName": "VALOR DE VENTA ACABADOS  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VALOR DE ADICIONALES O DESCUENTOS ACABADOS",
+              "displayName": "VALOR DE ADICIONALES O DESCUENTOS ACABADOS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TRANSPORTE Y DESCARGUE ",
+              "displayName": "TRANSPORTE Y DESCARGUE ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TOTAL VALOR DE CONTRATO",
+              "displayName": "TOTAL VALOR DE CONTRATO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VALOR OTRO SI ",
+              "displayName": "VALOR OTRO SI ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FECHA DE OTROSI",
+              "displayName": "FECHA DE OTROSI",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "VALOR CONTRATO + OTROSI ",
+              "displayName": "VALOR CONTRATO + OTROSI ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ACEPTA CARPETA",
+              "displayName": "ACEPTA CARPETA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID VALIDACION",
+              "displayName": "ID VALIDACION",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "OBSERVACIONES",
+              "displayName": "OBSERVACIONES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -816,
+        896
+      ],
+      "id": "fbec93c8-edbe-47e3-9f20-321979a828c1",
+      "name": "REGISTRAR CARPETA COMPLETA CO"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "FECHA": "={{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}",
+            "TIPO CONTRATO": "={{ $json.body.tipoContrato }}",
+            "NUMERO CONTRATO": "={{ $json.body.numeroContrato }}",
+            "CLIENTE ": "={{ $json.body.cliente }}",
+            "CEDULA": "={{ $json.body.cedula }}",
+            "TELEFONO": "={{ $json.body.telefono }}",
+            "ASESOR": "={{ $json.body.asesor }}",
+            "SEDE ": "={{ $json.body.sede }}",
+            "ACEPTA CARPETA": "={{ $json.body.aceptaCarpeta }}",
+            "OBSERVACION": "={{ $json.body.observacion }}",
+            "MES DE SEPARE": "={{ $json.body.mesSepare }}",
+            "FECHA DE PLAN SEPARE": "={{ $json.body.fechaSepare }}",
+            "DIAS DE PRORROGA": "={{ $json.body.diasProrroga }}",
+            "FECHA DE VENCIMIENTO ": "={{ $json.body.fechaVencimiento }}",
+            "ESTADO BASADO EN FECHA ": "={{ $json.body.estadoBasadoFecha }}",
+            "REFERENCIA CASA ": "={{ $json.body.referenciaCasa }}",
+            "PRECIO DE VENTA": "={{ $json.body.precioVenta }}",
+            "PRIMER ABONO ": "={{ $json.body.primerAbono }}",
+            "SALDO PLAN SEPARE": "={{ $json.body.saldoPlanSepare }}",
+            "ESTADO DEL PROYECTO ": "={{ $json.body.estadoProyecto }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "FECHA",
+              "displayName": "FECHA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TIPO CONTRATO",
+              "displayName": "TIPO CONTRATO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NUMERO CONTRATO",
+              "displayName": "NUMERO CONTRATO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CLIENTE ",
+              "displayName": "CLIENTE ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CEDULA",
+              "displayName": "CEDULA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TELEFONO",
+              "displayName": "TELEFONO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ASESOR",
+              "displayName": "ASESOR",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SEDE ",
+              "displayName": "SEDE ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "MES DE SEPARE",
+              "displayName": "MES DE SEPARE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FECHA DE PLAN SEPARE",
+              "displayName": "FECHA DE PLAN SEPARE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "DIAS DE PRORROGA",
+              "displayName": "DIAS DE PRORROGA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FECHA DE VENCIMIENTO ",
+              "displayName": "FECHA DE VENCIMIENTO ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ESTADO BASADO EN FECHA ",
+              "displayName": "ESTADO BASADO EN FECHA ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "REFERENCIA CASA ",
+              "displayName": "REFERENCIA CASA ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PRECIO DE VENTA",
+              "displayName": "PRECIO DE VENTA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PRIMER ABONO ",
+              "displayName": "PRIMER ABONO ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "SALDO PLAN SEPARE",
+              "displayName": "SALDO PLAN SEPARE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ESTADO DEL PROYECTO ",
+              "displayName": "ESTADO DEL PROYECTO ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ACEPTA CARPETA",
+              "displayName": "ACEPTA CARPETA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "OBSERVACION",
+              "displayName": "OBSERVACION",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -816,
+        1104
+      ],
+      "id": "d63a95f4-6a15-4420-8a90-1ff2abfc79c6",
+      "name": "REGISTRAR CARPETA COMPLETA PS"
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $('Obtener el primer correo de la bandeja').item.json.id }}",
+        "message": "=<h2>Proceso pendiente de validación administrativa</h2>  <p>Hola, <strong></strong>.</p>  <p> Te informamos que el proceso se encuentra actualmente <strong>pendiente de validación por parte del área administrativa</strong>. </p>  <p> Una vez realizada la validación, el proceso continuará automáticamente con las siguientes etapas de organización y almacenamiento de la documentación. </p>  <p> <strong>No es necesario realizar ninguna acción en este momento.</strong> </p>  <br>  <p> Atentamente,<br> Sistema de Gestión Documental<br> <strong>la organización</strong> </p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -1648,
+        880
+      ],
+      "id": "b7eb6dc7-c8de-46ca-be4e-02b632d1d1b7",
+      "name": "Notificar Asesor CO"
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $('Obtener el primer correo de la bandeja').item.json.id }}",
+        "message": "=<h2>Proceso pendiente de validación administrativa</h2>\n\n<p>Hola, <strong></strong>.</p>\n\n<p>\nTe informamos que el proceso se encuentra actualmente\n<strong>pendiente de validación por parte del área administrativa</strong>.\n</p>\n\n<p>\nUna vez realizada la validación, el proceso continuará automáticamente\ncon las siguientes etapas de organización y almacenamiento de la documentación.\n</p>\n\n<p>\n<strong>No es necesario realizar ninguna acción en este momento.</strong>\n</p>\n\n<br>\n\n<p>\nAtentamente,<br>\nSistema de Gestión Documental<br>\n<strong>la organización</strong>\n</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -1648,
+        1184
+      ],
+      "id": "59531da8-9dd9-40ac-bb3b-cc3aa8e92456",
+      "name": "Notificar Asesor PS"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (items.length === 0) {\n  return [];\n}\n\nreturn [items[0]];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        432
+      ],
+      "id": "e9d6f612-a1e9-4218-81cc-2c5a636c4f88",
+      "name": "ENVIAR UNA VEZ"
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $('Obtener el primer correo de la bandeja').item.json.id }}",
+        "message": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #333;\">\n\n<p>Hola,</p>\n\n<p>\nSe informa que la carpeta correspondiente al contrato \n<strong>{{ $('Preparar Nombres Carpetas').item.json.carpetaContrato }}</strong>\nha sido creada satisfactoriamente y compartida con el área operativa para realizar el seguimiento correspondiente.\n</p>\n\n<p>\nSaludos,<br>\n<strong>Sistema de Gestión Documental</strong><br>\nConstructora la organización\n</p>\n\n<p style=\"font-size: 12px; color: #777;\">\nEste mensaje ha sido generado automáticamente por el sistema.<br>\n<strong>Por favor, no responder a este mensaje.</strong>\n</p>\n\n</div>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1712,
+        432
+      ],
+      "id": "87169d56-2316-4978-8b71-aa614c060208",
+      "name": "Notificar operativa - Carpeta Compartida"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9c7fc904-7fad-483c-8153-9c4ea9264ce9",
+              "leftValue": "={{ $('NORMALIZAR ASUNTO').first().json.asuntoNormalizado.toLowerCase() }}",
+              "rightValue": "contratodeobra",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "0cff00f7-25d8-44c6-83e0-71a1c691af3a",
+              "leftValue": "={{ $('NORMALIZAR ASUNTO').first().json.from.value[0].address.toLowerCase() }}",
+              "rightValue": "@YOUR_COMPANY_DOMAIN",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -5040,
+        288
+      ],
+      "id": "78d9ad0f-aee0-4d0a-912a-3b20c5c5b527",
+      "name": "If CO"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e8164691-322a-48ad-890d-0e4391e63408",
+              "leftValue": "={{ $('NORMALIZAR ASUNTO').first().json.asuntoNormalizado.toLowerCase() }}",
+              "rightValue": "plansepare",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "4646ddc1-698d-4c30-971e-abdc9f532148",
+              "leftValue": "={{ $('NORMALIZAR ASUNTO').first().json.from.value[0].address.toLowerCase() }}",
+              "rightValue": "@YOUR_COMPANY_DOMAIN",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4864,
+        416
+      ],
+      "id": "0cf6c47c-ee5a-43f7-8ac7-16d25da91aad",
+      "name": "if PS"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e6bc9c2b-2c9a-4cd7-bf83-6ec41f25f202",
+              "leftValue": "={{ $('NORMALIZAR ASUNTO').first().json.asuntoNormalizado.toLowerCase() }}",
+              "rightValue": "devolucion",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "bd5aaf14-84cb-446b-9788-3151f5b1bdee",
+              "leftValue": "={{ $('NORMALIZAR ASUNTO').first().json.asuntoNormalizado.toLowerCase() }}",
+              "rightValue": "cancelacion",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4672,
+        272
+      ],
+      "id": "5d19ca28-e4e6-412f-8732-e62468e98283",
+      "name": "If KEY WORDS"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -5152,
+        672
+      ],
+      "id": "27a8e67c-06d0-4227-a45b-38a8a524635d",
+      "name": "Schedule Trigger Every day at midnight"
+    },
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $('Obtener el primer correo de la bandeja2').item.json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -3456,
+        64
+      ],
+      "id": "95119907-ff3b-426b-b164-92dba6911c45",
+      "name": "Marcar como leído"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Carpeta Cliente": {
+      "main": [
+        [
+          {
+            "node": "Carpeta del Contrato",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carpeta del Contrato": {
+      "main": [
+        [
+          {
+            "node": "CARPETA ADMINISTRATIVA",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "CARPETA OPERATIVA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CARPETA ADMINISTRATIVA": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEPARAR ADJUNTOS": {
+      "main": [
+        [
+          {
+            "node": "VALIDAR DOCUMENTOS PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If_FILTRAR CONTRATO": {
+      "main": [
+        [
+          {
+            "node": "Analizar Contrato Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analizar Contrato Gemini": {
+      "main": [
+        [
+          {
+            "node": "Convertir Respuesta JSON a TEXTO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Nombres Carpetas": {
+      "main": [
+        [
+          {
+            "node": "Carpeta Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Subir PDF Administrativa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CARPETA OPERATIVA": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Filtrar PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar PDF": {
+      "main": [
+        [
+          {
+            "node": "Subir PDF Operativa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subir PDF Administrativa": {
+      "main": [
+        []
+      ]
+    },
+    "VALIDAR DOCUMENTOS PDF": {
+      "main": [
+        [
+          {
+            "node": "If_FILTRAR CONTRATO",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "CONSERVAR UN SOLO ITEM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BUSCAR CORREO_DESCARGAR PDF": {
+      "main": [
+        [
+          {
+            "node": "SEPARAR ADJUNTOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convertir Respuesta JSON a TEXTO": {
+      "main": [
+        [
+          {
+            "node": "Tipo de Contrato formulario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook (Google Pub/Sub)": {
+      "main": [
+        [
+          {
+            "node": "(Decodificar Base64)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "(Decodificar Base64)": {
+      "main": [
+        [
+          {
+            "node": "Obtener el primer correo de la bandeja",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONSERVAR UN SOLO ITEM": {
+      "main": [
+        [
+          {
+            "node": "Marcar como leído",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NORMALIZAR ASUNTO": {
+      "main": [
+        [
+          {
+            "node": "If CO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MENSAJE PDF INCOMPLETO": {
+      "main": [
+        []
+      ]
+    },
+    "Tipo de Contrato formulario": {
+      "main": [
+        [
+          {
+            "node": "Generar ID validacion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generar ID validacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear URL Formulario CO": {
+      "main": [
+        [
+          {
+            "node": "Enviar Correo Validación CO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Correo Validación CO": {
+      "main": [
+        [
+          {
+            "node": "Marcar como leído CO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear URL Formulario PS": {
+      "main": [
+        [
+          {
+            "node": "Enviar Correo Validación PS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Correo Validación PS": {
+      "main": [
+        [
+          {
+            "node": "Marcar como leído PS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener el primer correo de la bandeja": {
+      "main": [
+        [
+          {
+            "node": "NORMALIZAR ASUNTO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar ID validacion": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Crear URL Formulario CO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Crear URL Formulario PS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait CO": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait PS": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subir PDF Operativa": {
+      "main": [
+        [
+          {
+            "node": "Share folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar como leído CO": {
+      "main": [
+        [
+          {
+            "node": "Notificar Asesor CO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar como leído PS": {
+      "main": [
+        [
+          {
+            "node": "Notificar Asesor PS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "REGISTRAR CARPETA COMPLETA PS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DOCUMENTACION INCOMPLETA1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "REGISTRAR CARPETA COMPLETA CO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DOCUMENTACION INCOMPLETA2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "REGISTRAR CARPETA COMPLETA CO": {
+      "main": [
+        [
+          {
+            "node": "Preparar Nombres Carpetas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "REGISTRAR CARPETA COMPLETA PS": {
+      "main": [
+        [
+          {
+            "node": "Preparar Nombres Carpetas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notificar Asesor CO": {
+      "main": [
+        [
+          {
+            "node": "Wait CO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notificar Asesor PS": {
+      "main": [
+        [
+          {
+            "node": "Wait PS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share folder": {
+      "main": [
+        [
+          {
+            "node": "ENVIAR UNA VEZ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ENVIAR UNA VEZ": {
+      "main": [
+        [
+          {
+            "node": "Notificar operativa - Carpeta Compartida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If CO": {
+      "main": [
+        [
+          {
+            "node": "If KEY WORDS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "if PS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if PS": {
+      "main": [
+        [
+          {
+            "node": "If KEY WORDS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If KEY WORDS": {
+      "main": [
+        [],
+        [
+          {
+            "node": "BUSCAR CORREO_DESCARGAR PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger Every day at midnight": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar como leído": {
+      "main": [
+        [
+          {
+            "node": "MENSAJE PDF INCOMPLETO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed"
+  }
+}
